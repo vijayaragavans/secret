@@ -31,8 +31,6 @@ func Encrypt(key []byte, plaintext string) ([]byte, error) {
 		return nil, fmt.Errorf("encryption produced empty ciphertext")
 	}
 
-	fmt.Println("ciphertext: ", ciphertext)
-
 	EncryptedByte := []byte(base64.StdEncoding.EncodeToString(ciphertext))
 	return EncryptedByte, nil
 }
