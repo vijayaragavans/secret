@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+	"github.com/vijayaragavans/secret/api"
 )
 
 var Lang = "en"
@@ -43,7 +44,7 @@ func main() {
 
 	r := mux.NewRouter()
 
-	//r.HandleFunc("/ismobilevalid", login.IsMobileValid).Methods("POST")
+	r.HandleFunc("/generate", api.Generate).Methods("POST")
 
 	r.Use(withTimeout)
 
