@@ -3,7 +3,9 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/vijayaragavans/secret/config"
 	"github.com/vijayaragavans/secret/internal"
@@ -48,8 +50,11 @@ func Generate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Use provided key or default
+	key := fmt.Sprintf("%d", time.Now().UnixNano())
+
 	// Create request to Vault
-	if req, err = http.NewRequest("POST", config.VAULT_URL+"generated-secret", bytes.NewBuffer(payloadBytes)); err != nil {
+	if req, err = http.NewRequest("POST", config.VAULT_URL+key, bytes.NewBuffer(payloadBytes)); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -65,6 +70,10 @@ func Generate(w http.ResponseWriter, r *http.Request) {
 
 	defer resp.Body.Close()
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
-	w.Write([]byte(config.SUCCESS_MSG))
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": config.SUCCESS_MSG,
+		"key":     key,
+	})
 }

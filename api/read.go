@@ -30,7 +30,12 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		}
 	)
 
-	if req, err = http.NewRequest("GET", config.VAULT_URL+"generated-secret", nil); err != nil {
+	key := r.URL.Query().Get("key")
+	if key == "" {
+		key = "generated-secret"
+	}
+
+	if req, err = http.NewRequest("GET", config.VAULT_URL+key, nil); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
