@@ -3,9 +3,7 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/vijayaragavans/secret/config"
 	"github.com/vijayaragavans/secret/internal"
@@ -51,7 +49,7 @@ func Generate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Use provided key or default
-	key := fmt.Sprintf("%d", time.Now().UnixNano())
+	key := internal.GenerateRandomKey()
 
 	// Create request to Vault
 	if req, err = http.NewRequest("POST", config.VAULT_URL+key, bytes.NewBuffer(payloadBytes)); err != nil {

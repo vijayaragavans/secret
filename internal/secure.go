@@ -8,6 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	mathrand "math/rand"
+	"strings"
+	"time"
 )
 
 func Encrypt(key []byte, plaintext string) ([]byte, error) {
@@ -65,4 +68,20 @@ func Decrypt(encryption_key []byte, data string) (string, error) {
 	}
 
 	return string(plaintext), nil
+}
+
+// GenerateRandomKey generates a random alphanumeric key
+func GenerateRandomKey() string {
+	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
+	const keyLength = 16
+
+	r := mathrand.New(mathrand.NewSource(time.Now().UnixNano()))
+	var sb strings.Builder
+	sb.Grow(keyLength)
+
+	for i := 0; i < keyLength; i++ {
+		sb.WriteByte(charset[r.Intn(len(charset))])
+	}
+
+	return sb.String()
 }
