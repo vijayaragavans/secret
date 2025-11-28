@@ -1,7 +1,8 @@
 package api
 
 import (
-	"log"
+	"bytes"
+	"encoding/json"
 	"net/http"
 
 	"github.com/vijayaragavans/secret/config"
@@ -10,16 +11,60 @@ import (
 
 func Generate(w http.ResponseWriter, r *http.Request) {
 
+	type Input struct {
+		Data string `json:"data"`
+	}
 	var (
-		password []byte
-		err      error
+		input                Input
+		payloadBytes, secret []byte
+		err                  error
+		req                  *http.Request
+		resp                 *http.Response
 	)
 
-	if password, err = internal.Encrypt([]byte(config.EncryptKey), "akjdhaksdjhaksd"); err != nil {
-		log.Println("Error:", err)
+	// Prepare data for Vault
+	type VaultData struct {
+		Data map[string]string `json:"data"`
 	}
 
-	w.WriteHeader(200)
-	w.Write(password)
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 
+	if secret, err = internal.Encrypt([]byte(config.EncryptKey), input.Data); err != nil {
+		http.Error(w, "Encryption failed", http.StatusInternalServerError)
+		return
+	}
+
+	vaultPayload := VaultData{
+		Data: map[string]string{
+			"secret": string(secret),
+		},
+	}
+
+	if payloadBytes, err = json.Marshal(vaultPayload); err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Create request to Vault
+	if req, err = http.NewRequest("POST", config.VAULT_URL+"generated-secret", bytes.NewBuffer(payloadBytes)); err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	req.Header.Set("X-Vault-Token", config.VAULT_TOKEN)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	if resp, err = client.Do(req); err != nil || resp.StatusCode != 200 {
+		http.Error(w, "Vault connection failed", http.StatusInternalServerError)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	w.WriteHeader(200)
+	w.Write([]byte(config.SUCCESS_MSG))
 }
