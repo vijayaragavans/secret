@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/gorilla/mux"
+
 	"github.com/vijayaragavans/secret/config"
 	"github.com/vijayaragavans/secret/internal"
 )
@@ -30,10 +32,8 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		}
 	)
 
-	key := r.URL.Query().Get("key")
-	if key == "" {
-		key = "generated-secret"
-	}
+	vars := mux.Vars(r)
+	key := vars["key"]
 
 	if req, err = http.NewRequest("GET", config.VAULT_URL+key, nil); err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

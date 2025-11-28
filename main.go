@@ -45,7 +45,7 @@ func main() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/generate", api.Generate).Methods("POST")
-	r.HandleFunc("/read", api.Read).Methods("GET")
+	r.HandleFunc("/read/{key}", api.Read).Methods("GET")
 
 	r.Use(withTimeout)
 
